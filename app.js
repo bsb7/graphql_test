@@ -16,23 +16,26 @@ app.use(bodyParser.json());
 app.use('/graphql', graphqlHttp({
     schema:buildSchema(`
      type Event {
-        _id: ID
-        title: String
+        _id: ID!
+        title: String!
         description: String
-        price: Float
+        price: Float!
         date: String
     }
+
     input EventInput {
         title: String!
         description: String!
         price: Float!
         date: String!
     }
+
     type RootQuery {
         events: [Event!]!
     }
+
     type RootMutation{
-        createEvent(eventInput:EventInput):Event
+        createEvent( eventInput:EventInput):Event
     }
 
 
@@ -47,7 +50,7 @@ app.use('/graphql', graphqlHttp({
         },
         createEvent: (args)=>{
             const event = {
-                _id: Math.randon().toString(),
+                _id: Math.random().toString(),
                 title: args.eventInput.title,
                 description:args.eventInput.description,
                 price: +args.eventInput.price,
@@ -63,4 +66,4 @@ app.use('/graphql', graphqlHttp({
 }))
 
 
-app.listen(3000);
+app.listen(3001);
