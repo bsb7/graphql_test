@@ -1,12 +1,13 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const graphqlHttp = require("express-graphql");
+const bycrypt = require("bcryptjs");
 
 const { buildSchema } = require("graphql");
 const mongoose = require("mongoose");
 const Event = require("./models/event");
+const User = require("./models/user");
 const app = express();
-
 app.use(bodyParser.json());
 
 app.use(
@@ -19,6 +20,17 @@ app.use(
         description: String
         price: Float!
         date: String
+    }
+
+    type User {
+      _id: ID!
+      email:String!
+      password: String
+    }
+
+    input UserInput {
+      email: String!
+      password: String!
     }
 
     input EventInput {
@@ -34,6 +46,7 @@ app.use(
 
     type RootMutation{
         createEvent( eventInput:EventInput):Event
+        createUser(userInput: UserInput): User
     }
 
 
@@ -45,18 +58,19 @@ app.use(
     rootValue: {
       events: () => {
         // .find() = static method, find allows us to find documents in that collection so, find event documents
-        // we could pass a filter, 
+        // we could pass a filter,
         // ex. Event.find({title:"test"})
-        // if dont pass anything in the filter it will give us all the entries in that collections 
+        // if dont pass anything in the filter it will give us all the entries in that collections
 
-        return Event.find().then(events=>{
-            return events.map(event =>{
-              return {...event._doc }
-            })
-          }
-        ).catch(err=>{
-          throw err;
-        });
+        return Event.find()
+          .then(events => {
+            return events.map(event => {
+              return { ...event._doc };
+            });
+          })
+          .catch(err => {
+            throw err;
+          });
       },
       createEvent: args => {
         const event = new Event({
@@ -73,6 +87,23 @@ app.use(
           })
           .catch(error => {
             throw error;
+          });
+      },
+      createUser: args => {
+        return bycrypt
+          .hash(args.userInput.password, 12)
+          .then(hashPassword => {
+            const user = new User({
+              email: args.userInput.email,
+              password: hashPassword
+            });
+            return user.save();
+          })
+          .then(result => {
+            return { ...result._doc, _id: result.id };
+          })
+          .catch(err => {
+            throw err;
           });
       }
     },
