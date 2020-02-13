@@ -44,7 +44,19 @@ app.use(
     `),
     rootValue: {
       events: () => {
-        return events;
+        // .find() = static method, find allows us to find documents in that collection so, find event documents
+        // we could pass a filter, 
+        // ex. Event.find({title:"test"})
+        // if dont pass anything in the filter it will give us all the entries in that collections 
+
+        return Event.find().then(events=>{
+            return events.map(event =>{
+              return {...event._doc }
+            })
+          }
+        ).catch(err=>{
+          throw err;
+        });
       },
       createEvent: args => {
         const event = new Event({
