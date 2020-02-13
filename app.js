@@ -90,8 +90,15 @@ app.use(
           });
       },
       createUser: args => {
-        return bycrypt
-          .hash(args.userInput.password, 12)
+        // to not return similar user with the same e-mail address
+        return User.findOne({ email: args.userInput.email })
+          .then(user => {
+            if (user) {
+              // if there is a user with the same email
+              throw new Error("User exist already");
+            }
+            return bycrypt.hash(args.userInput.password, 12);
+          })
           .then(hashPassword => {
             const user = new User({
               email: args.userInput.email,
@@ -100,6 +107,7 @@ app.use(
             return user.save();
           })
           .then(result => {
+            // if you dont want to return password return {...result._doc,password:null, _id: result.id}
             return { ...result._doc, _id: result.id };
           })
           .catch(err => {
